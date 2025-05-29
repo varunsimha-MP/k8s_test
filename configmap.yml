@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  MYSQL_DATABASE: django_crud
+  DB_HOST: mydb 
+  DB_NAME: django_crud
+  DB_USER: root
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS django_crud;
+    USE django_crud;
+
+    CREATE TABLE IF NOT EXISTS app_register(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        firstname VARCHAR(50) NOT NULL,
+        lastname VARCHAR(50) NOT NULL,
+        email VARCHAR(50) NOT NULL,
+        contact BIGINT
+    );

@@ -1,0 +1,42 @@
+#ServiceAccount
+#This creates a Prometheus-specific identity in your cluster, which will be used to generate the token that allows access to the Kubernetes API and kubelet endpoints.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-sa
+  namespace: default
+
+---
+
+#ClusterRole
+#This defines what actions the Prometheus service account can perform. It allows access to Kubernetes resources (like nodes, pods, etc.) and non-resource URLs like /metrics.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-k8s-role
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/proxy", "services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
+    verbs: ["get"]
+
+---
+# ClusterRoleBinding
+#This binds the ServiceAccount to the ClusterRole, giving it the permissions defined above.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-k8s-role-binding
+roleRef:
+  kind: ClusterRole
+  name: prometheus-k8s-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-sa
+    namespace: default
+
