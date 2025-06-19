@@ -1,0 +1,60 @@
+# ApplicationSet Template Values
+# This file defines values used by the ApplicationSet template
+
+project:
+  name: "multi-env-project"
+  
+# Repository configuration
+repository:
+  url: "https://github.com/your-username/your-repo.git"
+  
+# Global settings
+global:
+  domain: "example.com"
+  imageRegistry: "varunsimha"
+  
+# Environment-specific overrides
+environments:
+  dev:
+    domain: "dev.example.com"
+    replicas:
+      django: 1
+      postgres: 1
+    resources:
+      django:
+        cpu: "200m"
+        memory: "256Mi"
+      postgres:
+        cpu: "300m"
+        memory: "512Mi"
+        storage: "5Gi"
+  
+
+# Database configuration
+database:
+  name: "djangodb"
+  username: "django"
+  password: "postgres-password"
+  adminPassword: "admin-password"
+
+# Image configuration
+image:
+  django:
+    repository: "varunsimha/last"
+    tags:
+      dev: "dev"
+      staging: "staging"
+      prod: "latest"
+  postgres:
+    repository: "postgres"
+    tag: "13"
+
+# Sync configuration
+sync:
+  waves:
+    database: "1"
+    application: "2"
+  policy:
+    automated: true
+    prune: true
+    selfHeal: true

@@ -1,0 +1,38 @@
+# AppProject Configuration Values
+project:
+    name: "multi-env-project"
+    environment: "multi"
+    team: "platform"
+    description: "Multi-environment application project for Django and PostgreSQL deployment"
+
+    # Source repositories that applications can deploy from
+    sourceRepos:
+        - "*" # Allow all repositories (can be restricted to specific repos)
+        - "https://github.com/your-org/your-repo.git"
+
+    # Destination clusters and namespaces
+    destinations:
+        - namespace: "dev"
+          server: "https://kubernetes.default.svc"
+
+    # RBAC roles for the project
+    roles:
+        - name: "admin"
+          description: "Full access to project applications"
+          policies:
+              - "p, proj:multi-env-project:admin, applications, *, multi-env-project/*, allow"
+              - "p, proj:multi-env-project:admin, repositories, *, *, allow"
+              - "p, proj:multi-env-project:admin, clusters, *, *, allow"
+          groups:
+              - "platform-team"
+              - "devops-team"
+
+    # Sync windows for controlled deployments
+    syncWindows:
+        - kind: "allow"
+          schedule: "0 9-17 * * 1-5" # Business hours, Monday to Friday
+          duration: "8h"
+          applications:
+              - "*-dev"
+              - "*-staging"
+          manualSync: true

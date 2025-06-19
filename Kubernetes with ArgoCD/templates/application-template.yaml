@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: '{{.Values.application.name}}'
+  namespace: argocd
+  labels:
+    environment: '{{.Values.application.environment}}'
+    app-type: '{{.Values.application.type | default "web"}}'
+    team: '{{.Values.application.team | default "platform"}}'
+  annotations:
+    argocd.argoproj.io/sync-wave: '{{.Values.application.syncWave | default "0"}}'
+    {{- if .Values.application.notifications }}
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: '{{.Values.application.notifications.slack}}'
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: '{{.Values.application.notifications.slack}}'
+    {{- end }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: '{{.Values.application.project | default "default"}}'
+  
+  source:
+    repoURL: '{{.Values.application.source.repoURL}}'
+    targetRevision: '{{.Values.application.source.targetRevision | default "HEAD"}}'
+
+  destination:
+    server: '{{.Values.application.destination.server | default "https://kubernetes.default.svc"}}'
+    namespace: '{{.Values.application.destination.namespace}}'

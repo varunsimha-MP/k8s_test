@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: '{{.Values.project.name}}'
+  namespace: argocd
+  labels:
+    environment: '{{.Values.project.environment}}'
+    team: '{{.Values.project.team | default "platform"}}'
+spec:
+  description: '{{.Values.project.description | default "Application project for multi-environment deployment"}}'
+  
+  # Source repositories
+  sourceRepos:
+  {{- range .Values.project.sourceRepos }}
+  - '{{ . }}'
+  {{- end }}
+  
+  # Destination clusters and namespaces
+  destinations:
+  {{- range .Values.project.destinations }}
+  - namespace: '{{ .namespace }}'
+    server: '{{ .server | default "https://kubernetes.default.svc" }}'
+    name: '{{ .name | default "" }}'
+  {{- end }}
+  

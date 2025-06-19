@@ -1,0 +1,127 @@
+# Django Application Configuration Values
+application:
+  name: "django-app-dev"
+  environment: "dev"
+  type: "web"
+  team: "platform"
+  project: "multi-env-project"
+  syncWave: "2"  # Deploy after database
+  
+  # Notification settings
+  notifications:
+    slack: "#devops-alerts"
+  
+  # Source configuration
+  source:
+    repoURL: "<your-repo-url>"
+    targetRevision: "HEAD"
+    chart: "charts/django-app"
+    
+    helm:
+      # Value files to use
+      valueFiles:
+        - "values.yaml"
+        - "values-dev.yaml"
+      
+      # Inline values
+      values: |
+        replicaCount: 1
+        
+        image:
+          repository: varunsimha/last
+          tag: "dev"
+          pullPolicy: IfNotPresent
+        
+        service:
+          type: ClusterIP
+          port: 8000
+          targetPort: 8000
+        
+        ingress:
+          enabled: true
+          className: "alb"
+          annotations:
+            kubernetes.io/ingress.class: alb
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/target-type: ip
+          hosts:
+            - host: dev.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: django-app-tls
+              hosts:
+                - dev.example.com
+        
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        
+        env:
+          DB_HOST: postgres-dev
+          DB_PORT: "5432"
+          DB_NAME: djangodb_dev
+          DB_USER: django
+          DB_PASSWORD: postgres-password
+          DEBUG: "False"
+          ALLOWED_HOSTS: "dev.example.com"
+        
+        autoscaling:
+          enabled: false
+          minReplicas: 1
+          maxReplicas: 3
+          targetCPUUtilizationPercentage: 80
+      
+      # Helm parameters
+      parameters:
+        - name: "image.tag"
+          value: "dev"
+        - name: "replicaCount"
+          value: "1"
+          forceString: true
+      
+      releaseName: "django-app-dev"
+  
+  # Destination configuration
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "dev"
+  
+  # Sync policy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    
+    syncOptions:
+      - "CreateNamespace=true"
+      - "PrunePropagationPolicy=foreground"
+      - "PruneLast=true"
+      - "ServerSideApply=true"
+    
+    retry:
+      limit: 5
+      backoff:
+        duration: "5s"
+        factor: 2
+        maxDuration: "3m"
+  
+  # Ignore differences for certain fields
+  ignoreDifferences:
+    - group: "apps"
+      kind: "Deployment"
+      jsonPointers:
+        - "/spec/replicas"
+    - group: ""
+      kind: "Service"
+      jsonPointers:
+        - "/spec/clusterIP"
+  
+  # Revision history limit
+  revisionHistoryLimit: 10

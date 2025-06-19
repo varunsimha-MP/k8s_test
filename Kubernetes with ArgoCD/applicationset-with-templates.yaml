@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+    name: multi-app-template-set
+    namespace: argocd
+    labels:
+        app.kubernetes.io/name: multi-app-template-set
+        app.kubernetes.io/part-of: argocd
+spec:
+    generators:
+        - list:
+              elements:
+                  # Django Applications
+                  - name: django-app-dev
+                    chart: django-app
+                    environment: dev
+                    appType: web
+                    syncWave: "2"
+                    replicaCount: "1"
+                    imageTag: dev
+                    host: dev.example.com
+                    cpuLimit: 200m
+                    memoryLimit: 256Mi
+                    cpuRequest: 100m
+                    memoryRequest: 128Mi
+                    dbHost: postgres-dev
+                    dbName: djangodb_dev
+                    project: multi-env-project
+
+    template:
+        metadata:
+            name: "{{name}}"
+            labels:
+                environment: "{{environment}}"
+                app-type: "{{appType}}"
+            annotations:
+                argocd.argoproj.io/sync-wave: "{{syncWave}}"
+        spec:
+            project: "{{project}}"
+            source:
+                repoURL: "<your-repo-url>"
+                targetRevision: HEAD
+
+            destination:
+                server: https://kubernetes.default.svc
+                namespace: "{{environment}}"
+
+            syncPolicy:
+                automated:
+                    prune: true
+                    selfHeal: true
+                    allowEmpty: false
